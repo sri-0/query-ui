@@ -49,7 +49,7 @@ interface DataTableFilterCommandProps {
  */
 const boxClassName = cn(
   buttonVariants({ variant: "outline" }),
-  "h-11 w-full justify-start gap-2 px-3 text-sm font-normal",
+  "h-9 w-full justify-start gap-2 px-3 text-sm font-normal",
 );
 
 export function DataTableFilterCommand({

@@ -46,7 +46,7 @@ export function TabBar() {
       </div>
       <div className="flex items-center pr-1">
         <RainbowButton active={aiOpen} onClick={() => setAiOpen((v) => !v)} aria-pressed={aiOpen} aria-label="Toggle AI assistant">
-          <Sparkles className="size-3.5" /> AI
+          <Sparkles className="size-3.5" /> AI Chat
         </RainbowButton>
       </div>
     </div>

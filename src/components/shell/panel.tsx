@@ -9,7 +9,7 @@ import * as React from "react";
 export function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
     <div className={cn("flex h-full min-h-0 flex-col overflow-hidden p-2", className)}>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground">{children}</div>
     </div>
   );
 }

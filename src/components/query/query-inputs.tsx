@@ -64,13 +64,21 @@ export function QueryInputs({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex h-9 items-stretch gap-2 [&_input]:h-9">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setFiltersOpen((v) => !v)} aria-label={filtersOpen ? "Hide filters" : "Show filters"}>
+              {filtersOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{filtersOpen ? "Hide filters panel (⌘B)" : "Show filters panel (⌘B)"}</TooltipContent>
+        </Tooltip>
         <ToggleGroup type="single" variant="outline" spacing={0} value={mode} onValueChange={(v) => v && setMode(v as InputMode)} className="h-9 shrink-0 *:h-9 *:px-2.5">
           {modes.map((m) => {
             const meta = m === "filter" ? { icon: ListFilter, description: "Column filters (field:value)" } : MODE_META[m];
             return (
               <Tooltip key={m}>
                 <TooltipTrigger asChild>
-                  <ToggleGroupItem value={m} aria-label={meta.description}>
+                  <ToggleGroupItem value={m} aria-label={meta.description} className="data-[state=on]:bg-primary! data-[state=on]:text-primary-foreground! data-[state=on]:border-primary!">
                     <meta.icon className="size-4" />
                   </ToggleGroupItem>
                 </TooltipTrigger>
@@ -97,14 +105,6 @@ export function QueryInputs({
           )}
         </div>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => setFiltersOpen((v) => !v)} aria-label={filtersOpen ? "Hide filters" : "Show filters"}>
-              {filtersOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{filtersOpen ? "Hide filters panel (⌘B)" : "Show filters panel (⌘B)"}</TooltipContent>
-        </Tooltip>
         <Button variant="outline" className="h-9 shrink-0" onClick={() => openComposer(tab.id)}>
           <SlidersHorizontal className="size-4" /> Builder
           {tab.advanced.length > 0 && <Badge variant="secondary">{tab.advanced.length}</Badge>}
