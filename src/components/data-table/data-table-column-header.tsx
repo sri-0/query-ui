@@ -77,7 +77,8 @@ export function DataTableColumnHeader<TData extends RowData, TValue>({ column, t
         }}
         title="Drag to reorder"
         aria-label={`Drag ${title} column`}
-        className="-ml-1 shrink-0 cursor-grab rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/header:opacity-100 active:cursor-grabbing"
+        // Zero width until hover so the title stays flush left; it slides in on hover.
+        className="w-0 shrink-0 cursor-grab overflow-hidden rounded-sm text-muted-foreground opacity-0 transition-all duration-150 group-hover/header:-ml-1 group-hover/header:w-4 group-hover/header:opacity-100 active:cursor-grabbing"
       >
         <GripVertical className="size-3.5" />
       </span>
