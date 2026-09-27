@@ -56,7 +56,7 @@ export function AiPanel() {
   };
 
   return (
-    <Panel className="pl-0">
+    <Panel>
       <PanelHeader title="AI assistant" icon={<Bot className="size-4" />} onClose={() => setAiOpen(false)} />
       <Conversation className="min-h-0 flex-1">
         <ConversationContent>

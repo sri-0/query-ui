@@ -27,7 +27,9 @@ export function rowActionsColumn(): ColumnDef<DataTableFeatures, Row> {
     enableHiding: false,
     enableSorting: false,
     enableResizing: false,
-    size: 40,
+    size: 28,
+    minSize: 28,
+    maxSize: 28,
     header: () => null,
     cell: ({ row }) => <RowMenu row={row.original} rowId={row.id} />,
   };
@@ -39,7 +41,7 @@ function RowMenu({ row, rowId }: { row: Row; rowId: string }) {
     <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-6" aria-label="Row actions">
+          <Button variant="ghost" size="icon" className="size-5" aria-label="Row actions">
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

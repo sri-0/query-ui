@@ -357,7 +357,7 @@ export function DataTableInfinite<TData extends RowData>({
       <ResizablePanelGroup orientation="horizontal" className={cn("h-full w-full", className)}>
         <FilterPanel tableId={tableId} footerSlot={footerSlot} />
         <ResizablePanel id={`${tableId}-main`} minSize="30%" className="min-w-0">
-          <Panel className="px-0">
+          <Panel>
           <div className="border-border relative flex h-full max-w-full flex-1 flex-col" style={columnSizeVars as React.CSSProperties}>
             <DataTableFilterRail />
             <div
@@ -543,7 +543,7 @@ function FilterPanel({ tableId, footerSlot }: { tableId: string; footerSlot?: Re
         }}
         className="min-w-0"
       >
-        <Panel className="pr-0">
+        <Panel>
           <PanelHeader
             title="Filters"
             actions={table.state.columnFilters.length ? <DataTableResetButton /> : null}
@@ -556,7 +556,7 @@ function FilterPanel({ tableId, footerSlot }: { tableId: string; footerSlot?: Re
           {footerSlot ? <div className="border-border shrink-0 border-t p-3">{footerSlot}</div> : null}
         </Panel>
       </ResizablePanel>
-      <ResizableHandle className={cn("w-2 bg-transparent after:w-full", !open && "hidden")} />
+      <ResizableHandle className={cn("w-0 bg-transparent after:w-3", !open && "hidden")} />
     </>
   );
 }
