@@ -21,11 +21,13 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { QueryFooter } from "./query-footer";
 import { QueryInputs } from "./query-inputs";
+import { ChartSeriesSelect } from "./chart-series-select";
 import { rowActionsColumn, SelectionBar } from "./table/row-actions";
 import { useTabs } from "@/lib/store/tabs";
 
-const MODEL_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
-const SERIES_COLORS: Record<string, string> = { ...LEVEL_COLORS, total: "var(--chart-1)" };
+/** Categorical palette for series without a semantic colour (the theme's chart tokens are neutral). */
+const CATEGORY_COLORS = ["#60a5fa", "#f97316", "#a78bfa", "#34d399", "#f472b6", "#facc15", "#22d3ee", "#fb7185", "#a3e635", "#c084fc"];
+const SERIES_COLORS: Record<string, string> = { ...LEVEL_COLORS, total: CATEGORY_COLORS[0] };
 
 type Props = {
   tab: QueryTab;
@@ -45,7 +47,7 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
   const defaultVisibility = React.useMemo(() => getDefaultColumnVisibility(tableSchema.definition), [tableSchema]);
 
   const state = useFilterState<Record<string, unknown>>();
-  const body = React.useMemo(() => buildRequest(tab, schema, state), [tab, schema, state]);
+  const body = React.useMemo(() => buildRequest(tab, schema, state, { histogramSeries: tab.chartSeries }), [tab, schema, state]);
   const options = React.useMemo(() => searchOptions(body), [body]);
   const queryClient = useQueryClient();
   const { data, isFetching, isLoading, fetchNextPage, hasNextPage, error } = useInfiniteQuery(options);
@@ -86,7 +88,7 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
   const series = React.useMemo<TimelineChartSeries[]>(() => {
     const keys = meta?.chartSeries ?? ["total"];
     const isModel = body.histogram?.series === MODEL_COLUMN;
-    return keys.map((k, i) => ({ key: k, label: k, color: isModel ? MODEL_COLORS[i % MODEL_COLORS.length] : SERIES_COLORS[k] ?? MODEL_COLORS[i % MODEL_COLORS.length] }));
+    return keys.map((k, i) => ({ key: k, label: k, color: (!isModel && SERIES_COLORS[k]) || CATEGORY_COLORS[i % CATEGORY_COLORS.length] }));
   }, [meta?.chartSeries, body.histogram?.series]);
 
   const refresh = React.useCallback(() => queryClient.resetQueries({ queryKey: options.queryKey, exact: true }), [queryClient, options.queryKey]);
@@ -116,7 +118,12 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
               <TimelineChart data={meta?.chartData ?? []} columnId={schema.timeField} series={series} className="-mb-2" />
             ) : undefined
           }
-          toolbarActions={<DataTableRefreshButton onClick={refresh} />}
+          toolbarActions={
+            <>
+              {schema.timeField && <ChartSeriesSelect schema={schema} value={body.histogram?.series ?? ""} onChange={(chartSeries) => useTabs.getState().updateQuery(tab.id, { chartSeries })} />}
+              <DataTableRefreshButton onClick={refresh} />
+            </>
+          }
           footerSlot={<QueryFooter meta={meta} />}
           commandSlot={<QueryInputs tab={tab} schema={schema} filterSchema={filterSchema.definition} error={error ?? undefined} />}
           floatingBarSlot={<SelectionBar tabTitle={tab.title} />}

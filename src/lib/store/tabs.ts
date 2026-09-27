@@ -22,6 +22,8 @@ export type QueryTabState = {
   /** Typed filters from the query builder. */
   advanced: Filter[];
   mode: QueryMode;
+  /** Field the histogram is split/coloured by; "_model" for the model, "" for none, undefined for the default. */
+  chartSeries?: string;
   /** Audit id of the last executed query; used for share links. */
   lastQueryId?: string;
   /** Opened from a share link. */
@@ -119,7 +121,7 @@ export const useTabs = create<TabsStore>()(
 
 /** The query-state half of a tab, without identity or share id. */
 export function queryStateOf(t: QueryTab): QueryTabState {
-  return { models: t.models, filters: t.filters, lucene: t.lucene, text: t.text, semantic: t.semantic, advanced: t.advanced, mode: t.mode };
+  return { models: t.models, filters: t.filters, lucene: t.lucene, text: t.text, semantic: t.semantic, advanced: t.advanced, mode: t.mode, chartSeries: t.chartSeries };
 }
 
 export const selectActiveTab = (s: { tabs: Tab[]; activeId: string }) => s.tabs.find((t) => t.id === s.activeId);

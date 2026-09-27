@@ -66,11 +66,8 @@ export function DataTableViewOptions() {
             <CommandEmpty>No option found.</CommandEmpty>
             {!search && (
               <CommandGroup>
-                <CommandItem value="__show_all" onSelect={() => table.toggleAllColumnsVisible(true)}>
-                  Show all columns
-                </CommandItem>
-                <CommandItem value="__hide_all" onSelect={() => table.toggleAllColumnsVisible(false)}>
-                  Hide all columns
+                <CommandItem value="__toggle_all" onSelect={() => table.toggleAllColumnsVisible(!table.getIsAllColumnsVisible())}>
+                  {table.getIsAllColumnsVisible() ? "Hide all columns" : "Show all columns"}
                 </CommandItem>
               </CommandGroup>
             )}

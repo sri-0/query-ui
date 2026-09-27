@@ -91,8 +91,9 @@ export function buildRequest(
   const facets = schema.fields.filter((f) => facetable(f) && indices.some((m) => f.models.includes(m))).map((f) => f.name);
 
   const series =
-    opts.histogramSeries ??
-    (indices.length > 1
+    opts.histogramSeries !== undefined
+      ? opts.histogramSeries || undefined
+      : (indices.length > 1
       ? MODEL_COLUMN
       : schema.fields.find((f) => f.enum && f.ui?.cell === "level" && !f.conflict)?.name ??
         schema.fields.find((f) => f.enum && (f.name === "severity" || f.name === "level"))?.name);
