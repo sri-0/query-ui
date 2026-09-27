@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Copy, Home, Link2, MoreHorizontal, Pencil, Plus, Sparkles, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { copyWithToast } from "@/lib/copy";
+import * as React from "react";
 import { RainbowButton } from "./rainbow-button";
 
 export function TabBar() {
@@ -58,6 +59,9 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
   const rename = useTabs((s) => s.rename);
   const duplicate = useTabs((s) => s.duplicate);
   const openComposer = useUi((s) => s.openComposer);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const revealed = active || menuOpen;
+  const revealClass = revealed ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70";
 
   const share = () => {
     if (tab.kind !== "query") return;
@@ -84,16 +88,13 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
       <span className="truncate pr-1">{tab.title}</span>
       {tab.kind === "query" && (
         <>
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
                 aria-label="Tab actions"
                 onClick={(e) => e.stopPropagation()}
-                className={cn(
-                  "overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted",
-                  active ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70",
-                )}
+                className={cn("overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted", revealClass)}
               >
                 <MoreHorizontal className="size-3.5" />
               </button>
@@ -129,10 +130,7 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
               e.stopPropagation();
               close(tab.id);
             }}
-            className={cn(
-              "overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted",
-              active ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70",
-            )}
+            className={cn("overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted", revealClass)}
           >
             <X className="size-3.5" />
           </button>

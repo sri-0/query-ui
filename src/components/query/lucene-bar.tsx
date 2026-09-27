@@ -160,9 +160,9 @@ export function LuceneBar({
             <CommandEmpty>No suggestions</CommandEmpty>
             <CommandGroup heading={colon >= 0 ? `Values for ${fieldPart}` : "Fields & syntax"}>
               {suggestions.map((s) => (
-                <CommandItem key={s.value + s.label} value={s.value + s.label} onSelect={() => apply(s)} className="grid h-8 grid-cols-[minmax(120px,180px)_auto_1fr] items-center gap-3 py-0 text-xs">
+                <CommandItem key={s.value + s.label} value={s.value + s.label} onSelect={() => apply(s)} className="grid h-8 grid-cols-[minmax(120px,200px)_5.5rem_1fr] items-center gap-3 px-2 py-0 text-xs">
                   <span className="truncate font-mono">{s.label}</span>
-                  {s.type ? <Badge variant="outline" className="h-5 justify-self-start px-1.5 font-mono text-[10px] text-muted-foreground">{s.type}</Badge> : <span />}
+                  {s.type ? <Badge variant="outline" className="h-5 w-fit px-1.5 font-mono text-[10px] text-muted-foreground">{s.type}</Badge> : <span />}
                   <span className="truncate text-muted-foreground">{s.hint}</span>
                 </CommandItem>
               ))}
