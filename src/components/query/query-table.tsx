@@ -128,8 +128,9 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
 }
 
 function SheetSlot({ sheetFields, meta, fetched }: { sheetFields: SheetField<Row>[]; meta?: QueryMeta; fetched: number }) {
-  const { table, rowSelection, isLoading, filterFields } = useDataTable<Row, unknown>();
-  const key = Object.keys(rowSelection)[0];
+  const { table, isLoading, filterFields } = useDataTable<Row, unknown>();
+  // With a select column, the detail row is the `uuid` filter (row click), not the checkbox selection.
+  const key = useFilterState((s) => s.uuid) as string | null | undefined;
   const selected = React.useMemo(() => {
     if (isLoading && !key) return undefined;
     return table.getCoreRowModel().flatRows.find((r) => r.id === key);

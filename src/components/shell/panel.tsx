@@ -8,7 +8,7 @@ import * as React from "react";
 /** Inset panel chrome shared by the filters and assistant panels. */
 export function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden p-1.5", className)}>
+    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden p-1", className)}>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground">{children}</div>
     </div>
   );

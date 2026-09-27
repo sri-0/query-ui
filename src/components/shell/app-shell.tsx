@@ -27,7 +27,7 @@ export function AppShell() {
       <AppSidebar />
       <SidebarInset className="h-svh min-w-0 overflow-hidden">
         <TabBar />
-        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1 p-1.5">
+        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1 p-1">
           <ResizablePanel id="workspace" minSize="40%" className="min-w-0">
             <div className="h-full min-h-0 overflow-hidden">
               {hydrated && active && (active.kind === "home" ? <Landing /> : <QueryTabView key={active.id} tab={active} />)}
