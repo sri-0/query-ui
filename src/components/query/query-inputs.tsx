@@ -78,7 +78,7 @@ export function QueryInputs({
             return (
               <Tooltip key={m}>
                 <TooltipTrigger asChild>
-                  <ToggleGroupItem value={m} aria-label={meta.description} className="aria-checked:bg-primary! aria-checked:text-primary-foreground! aria-checked:border-primary!">
+                  <ToggleGroupItem value={m} aria-label={meta.description} className="aria-checked:bg-muted-foreground/25! aria-checked:text-foreground!">
                     <meta.icon className="size-4" />
                   </ToggleGroupItem>
                 </TooltipTrigger>

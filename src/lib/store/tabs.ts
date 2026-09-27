@@ -24,6 +24,8 @@ export type QueryTabState = {
   mode: QueryMode;
   /** Audit id of the last executed query; used for share links. */
   lastQueryId?: string;
+  /** Opened from a share link. */
+  shared?: boolean;
 };
 
 export type Tab =

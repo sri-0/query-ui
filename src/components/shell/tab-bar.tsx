@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTabs, type Tab } from "@/lib/store/tabs";
 import { useUi } from "@/lib/store/ui";
 import { cn } from "@/lib/utils";
-import { Copy, Home, Link2, MoreHorizontal, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { Copy, Home, Link2, MoreHorizontal, Pencil, Plus, Sparkles, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { copyWithToast } from "@/lib/copy";
 import { RainbowButton } from "./rainbow-button";
@@ -80,7 +80,7 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
         active ? "border-border bg-background text-foreground" : "border-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
       )}
     >
-      {tab.kind === "home" ? <Home className="size-3.5 shrink-0" /> : null}
+      {tab.kind === "home" ? <Home className="size-3.5 shrink-0" /> : tab.shared ? <Users className="size-3.5 shrink-0 text-muted-foreground" /> : null}
       <span className="truncate pr-1">{tab.title}</span>
       {tab.kind === "query" && (
         <>
@@ -90,12 +90,15 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
                 type="button"
                 aria-label="Tab actions"
                 onClick={(e) => e.stopPropagation()}
-                className={cn("rounded-sm p-0.5 hover:bg-muted", active ? "opacity-70 hover:opacity-100" : "opacity-0 group-hover:opacity-70")}
+                className={cn(
+                  "overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted",
+                  active ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70",
+                )}
               >
                 <MoreHorizontal className="size-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuContent align="start" className="min-w-48" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={share}>
                 <Link2 className="size-4" /> Share query link
               </DropdownMenuItem>
@@ -126,7 +129,10 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
               e.stopPropagation();
               close(tab.id);
             }}
-            className={cn("rounded-sm p-0.5 hover:bg-muted", active ? "opacity-70 hover:opacity-100" : "opacity-0 group-hover:opacity-70")}
+            className={cn(
+              "overflow-hidden rounded-sm p-0.5 transition-all duration-150 hover:bg-muted",
+              active ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70",
+            )}
           >
             <X className="size-3.5" />
           </button>

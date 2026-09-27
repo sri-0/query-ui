@@ -19,7 +19,7 @@ export default function SharedQueryPage() {
   React.useEffect(() => {
     if (!data || opened.current) return;
     opened.current = true;
-    openQuery({ ...savedQueryToTab(data), title: `Shared: ${data.indices.join(", ")}` });
+    openQuery({ ...savedQueryToTab(data), shared: true });
     router.replace("/");
   }, [data, openQuery, router]);
 

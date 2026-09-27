@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
@@ -22,7 +23,7 @@ const SYNTAX = [
   { insert: "_exists_:", label: "_exists_:field", hint: "field is present" },
 ];
 
-type Suggestion = { value: string; label: string; hint?: string; replaceToken: boolean };
+type Suggestion = { value: string; label: string; type?: string; hint?: string; replaceToken: boolean };
 
 /**
  * Lucene input with completions for field names, operators and values (from
@@ -89,9 +90,9 @@ export function LuceneBar({
     const fields = schema.fields
       .filter((f) => f.type !== "vector" && !f.conflict && f.name.toLowerCase().includes(q))
       .slice(0, 12)
-      .map<Suggestion>((f) => ({ value: `${f.name}:`, label: f.name, hint: `${f.type}${f.description ? ` · ${f.description}` : ""}`, replaceToken: true }));
-    const ops = q.length > 0 ? OPERATORS.filter((o) => o.toLowerCase().startsWith(q)).map<Suggestion>((o) => ({ value: `${o} `, label: o, hint: "operator", replaceToken: true })) : [];
-    const syntax = q.length === 0 ? SYNTAX.map<Suggestion>((s) => ({ value: s.insert, label: s.label, hint: s.hint, replaceToken: false })) : [];
+      .map<Suggestion>((f) => ({ value: `${f.name}:`, label: f.name, type: f.type, hint: f.description, replaceToken: true }));
+    const ops = q.length > 0 ? OPERATORS.filter((o) => o.toLowerCase().startsWith(q)).map<Suggestion>((o) => ({ value: `${o} `, label: o, type: "operator", replaceToken: true })) : [];
+    const syntax = q.length === 0 ? SYNTAX.map<Suggestion>((s) => ({ value: s.insert, label: s.label, type: "syntax", hint: s.hint, replaceToken: false })) : [];
     return [...fields, ...ops, ...syntax];
   }, [colon, field, fieldPart, valuePart, values.data, token.text, schema.fields]);
 
@@ -159,9 +160,10 @@ export function LuceneBar({
             <CommandEmpty>No suggestions</CommandEmpty>
             <CommandGroup heading={colon >= 0 ? `Values for ${fieldPart}` : "Fields & syntax"}>
               {suggestions.map((s) => (
-                <CommandItem key={s.value + s.label} value={s.value + s.label} onSelect={() => apply(s)} className="font-mono text-xs">
-                  <span>{s.label}</span>
-                  {s.hint && <span className="ml-auto truncate pl-4 text-muted-foreground">{s.hint}</span>}
+                <CommandItem key={s.value + s.label} value={s.value + s.label} onSelect={() => apply(s)} className="grid h-8 grid-cols-[minmax(120px,180px)_auto_1fr] items-center gap-3 py-0 text-xs">
+                  <span className="truncate font-mono">{s.label}</span>
+                  {s.type ? <Badge variant="outline" className="h-5 justify-self-start px-1.5 font-mono text-[10px] text-muted-foreground">{s.type}</Badge> : <span />}
+                  <span className="truncate text-muted-foreground">{s.hint}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
