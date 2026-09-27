@@ -157,4 +157,8 @@ export type SavedQuery = {
   resultCount: number;
   tookMs: number;
   request: QueryRequest;
+  saved: boolean;
+  name?: string;
 };
+
+export type QueryPatch = { saved?: boolean; name?: string };

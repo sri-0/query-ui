@@ -13,7 +13,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useTabs, type Tab } from "@/lib/store/tabs";
 import { useUi } from "@/lib/store/ui";
 import { cn } from "@/lib/utils";
-import { Copy, Home, Link2, MoreHorizontal, Pencil, Plus, Sparkles, Users, X } from "lucide-react";
+import { Copy, Home, Link2, MoreHorizontal, Pencil, Plus, Sparkles, Star, Users, X } from "lucide-react";
+import { usePatchQuery } from "@/lib/api/saved-queries";
 import { toast } from "sonner";
 import { copyWithToast } from "@/lib/copy";
 import * as React from "react";
@@ -60,6 +61,7 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
   const duplicate = useTabs((s) => s.duplicate);
   const openComposer = useUi((s) => s.openComposer);
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const patch = usePatchQuery();
   const revealed = active || menuOpen;
   const revealClass = revealed ? "w-5 opacity-70 hover:opacity-100" : "w-0 p-0 opacity-0 group-hover:w-5 group-hover:p-0.5 group-hover:opacity-70";
 
@@ -102,6 +104,17 @@ function TabItem({ tab, active, onActivate }: { tab: Tab; active: boolean; onAct
             <DropdownMenuContent align="start" className="min-w-48" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={share}>
                 <Link2 className="size-4" /> Share query link
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  if (!tab.lastQueryId) {
+                    toast.error("Run the query first to save it");
+                    return;
+                  }
+                  patch.mutate({ id: tab.lastQueryId, patch: { saved: true } });
+                }}
+              >
+                <Star className="size-4" /> Save query
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => openComposer(tab.id)}>
                 <Pencil className="size-4" /> Edit query

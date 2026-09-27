@@ -10,7 +10,9 @@ import type { ModelInfo } from "@/lib/api/types";
 import { useTabs } from "@/lib/store/tabs";
 import { useUi } from "@/lib/store/ui";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Database, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Database, Plus, Sparkles, Star } from "lucide-react";
+import { RainbowButton } from "@/components/shell/rainbow-button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as React from "react";
 import { RecentQueries } from "./recent-queries";
 
@@ -19,6 +21,7 @@ const MODEL_PREVIEW = 5;
 
 export function Landing() {
   const openComposer = useUi((s) => s.openComposer);
+  const setAiOpen = useUi((s) => s.setAiOpen);
 
   return (
     <ScrollArea className="h-full">
@@ -28,9 +31,14 @@ export function Landing() {
             <h1 className="text-2xl font-semibold tracking-tight">Query</h1>
             <p className="text-sm text-muted-foreground">Start from a model, a recent query, or ask the assistant.</p>
           </div>
-          <Button onClick={() => openComposer()}>
-            <Plus className="size-4" /> New query
-          </Button>
+          <div className="flex items-center gap-2">
+            <RainbowButton onClick={() => setAiOpen(true)} className="h-9">
+              <Sparkles className="size-3.5" /> Ask AI
+            </RainbowButton>
+            <Button onClick={() => openComposer()}>
+              <Plus className="size-4" /> New query
+            </Button>
+          </div>
         </div>
 
         <section className="flex flex-col gap-3">
@@ -39,8 +47,20 @@ export function Landing() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Recent queries</h2>
-          <RecentQueries />
+          <Tabs defaultValue="recent">
+            <TabsList>
+              <TabsTrigger value="recent">Recent queries</TabsTrigger>
+              <TabsTrigger value="saved" className="gap-1.5">
+                <Star className="size-3.5" /> Saved
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent" className="mt-3">
+              <RecentQueries />
+            </TabsContent>
+            <TabsContent value="saved" className="mt-3">
+              <RecentQueries saved />
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     </ScrollArea>

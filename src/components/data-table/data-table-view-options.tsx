@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { boxRadiusClassName } from "@/lib/style";
 import { cn } from "@/lib/utils";
-import { Check, GripVertical, Settings2 } from "lucide-react";
+import { Check, Eye, GripVertical } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export function DataTableViewOptions() {
@@ -51,8 +51,8 @@ export function DataTableViewOptions() {
           aria-expanded={open}
           className="shadow-none"
         >
-          <Settings2 className="h-4 w-4" />
-          <span className="sr-only">View</span>
+          <Eye className="h-4 w-4" />
+          <span className="sr-only">Show or hide columns</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent side="bottom" align="end" className="w-[200px] p-0">

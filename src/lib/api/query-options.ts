@@ -12,10 +12,10 @@ export const schemaOptions = (models: string[]) =>
     staleTime: 5 * 60_000,
   });
 
-export const recentQueriesOptions = (limit = 50) =>
+export const recentQueriesOptions = (limit = 50, saved = false) =>
   queryOptions({
-    queryKey: ["queries", limit],
-    queryFn: ({ signal }) => api.queries({ limit }, signal),
+    queryKey: ["queries", limit, saved],
+    queryFn: ({ signal }) => api.queries({ limit, saved }, signal),
     staleTime: 10_000,
   });
 

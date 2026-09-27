@@ -1,6 +1,7 @@
 import type {
   ModelInfo,
   QueryMeta,
+  QueryPatch,
   QueryRequest,
   QueryResponse,
   SavedQuery,
@@ -56,12 +57,15 @@ export const api = {
     post<ValuesResponse>("/search/autocomplete", body, signal),
   validate: (body: { indices?: string[]; lucene: string }, signal?: AbortSignal) =>
     post<ValidateResponse>("/search/validate", body, signal),
-  queries: (params: { limit?: number; user?: string } = {}, signal?: AbortSignal) => {
+  queries: (params: { limit?: number; user?: string; saved?: boolean } = {}, signal?: AbortSignal) => {
     const qs = new URLSearchParams();
     if (params.limit) qs.set("limit", String(params.limit));
     if (params.user) qs.set("user", params.user);
+    if (params.saved) qs.set("saved", "true");
     const s = qs.toString();
     return request<{ queries: SavedQuery[] }>(`/queries${s ? `?${s}` : ""}`, { signal });
   },
   savedQuery: (id: string, signal?: AbortSignal) => request<SavedQuery>(`/queries/${id}`, { signal }),
+  patchQuery: (id: string, patch: QueryPatch) =>
+    request<SavedQuery>(`/queries/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
 };

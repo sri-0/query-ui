@@ -3,12 +3,21 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { recentQueriesOptions } from "@/lib/api/query-options";
+import { usePatchQuery } from "@/lib/api/saved-queries";
 import type { SavedQuery } from "@/lib/api/types";
+import { copyWithToast } from "@/lib/copy";
 import { describeSavedQuery, savedQueryToTab } from "@/lib/schema/saved-query";
 import { useTabs } from "@/lib/store/tabs";
 import { useQuery } from "@tanstack/react-query";
@@ -23,15 +32,16 @@ import {
   type PaginationState,
 } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
-import { Play } from "lucide-react";
+import { Copy, Link2, MoreHorizontal, Play, Star, StarOff } from "lucide-react";
 import * as React from "react";
 
 const PAGE_SIZE = 10;
 const features = tableFeatures({ rowPaginationFeature, paginatedRowModel: createPaginatedRowModel() });
 const helper = createColumnHelper<typeof features, SavedQuery>();
 
-export function RecentQueries() {
-  const { data, isLoading, error } = useQuery(recentQueriesOptions(200));
+/** Audited queries, optionally only the saved ones, paginated client-side. */
+export function RecentQueries({ saved = false }: { saved?: boolean }) {
+  const { data, isLoading, error } = useQuery(recentQueriesOptions(200, saved));
   const openQuery = useTabs((s) => s.openQuery);
   const reopen = React.useCallback((q: SavedQuery) => openQuery(savedQueryToTab(q)), [openQuery]);
 
@@ -40,7 +50,13 @@ export function RecentQueries() {
       helper.display({
         id: "query",
         header: "Query",
-        cell: ({ row }) => <span className="block max-w-md truncate font-mono text-xs">{describeSavedQuery(row.original)}</span>,
+        cell: ({ row }) => (
+          <span className="flex max-w-md items-center gap-2 truncate font-mono text-xs">
+            {row.original.saved && <Star className="size-3 shrink-0 fill-current text-warning" />}
+            {row.original.name ? <span className="font-sans font-medium">{row.original.name}</span> : null}
+            <span className="truncate text-muted-foreground">{describeSavedQuery(row.original)}</span>
+          </span>
+        ),
       }),
       helper.accessor("indices", {
         header: "Models",
@@ -71,17 +87,13 @@ export function RecentQueries() {
         cell: ({ getValue }) => <UserAvatar user={getValue()} />,
       }),
       helper.display({
-        id: "open",
+        id: "actions",
         header: "",
-        cell: () => (
-          <Button size="icon" variant="ghost" className="size-7" aria-label="Open">
-            <Play className="size-3.5" />
-          </Button>
-        ),
+        cell: ({ row }) => <QueryActions query={row.original} onOpen={() => reopen(row.original)} />,
       }),
       // TanStack v9's column helper narrows TValue per accessor; the table wants the wide union.
     ] as ColumnDef<typeof features, SavedQuery>[],
-    [],
+    [reopen],
   );
 
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE });
@@ -93,9 +105,13 @@ export function RecentQueries() {
   const table = useTable(tableOptions);
 
   if (isLoading) return <Skeleton className="h-40 rounded-xl" />;
-  if (error) return <p className="text-sm text-destructive">Could not load recent queries: {error.message}</p>;
+  if (error) return <p className="text-sm text-destructive">Could not load queries: {error.message}</p>;
   if (!data?.queries.length) {
-    return <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No queries yet. Run one and it will appear here.</p>;
+    return (
+      <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+        {saved ? "No saved queries yet. Save one from a tab's menu or from the recent list." : "No queries yet. Run one and it will appear here."}
+      </p>
+    );
   }
 
   const page = table.state.pagination.pageIndex;
@@ -109,7 +125,7 @@ export function RecentQueries() {
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((h) => (
-                  <TableHead key={h.id} className={h.id === "user" || h.id === "open" ? "w-10" : undefined}>
+                  <TableHead key={h.id} className={h.id === "user" || h.id === "actions" ? "w-10" : undefined}>
                     {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
                   </TableHead>
                 ))}
@@ -152,6 +168,37 @@ export function RecentQueries() {
           </PaginationContent>
         </Pagination>
       )}
+    </div>
+  );
+}
+
+function QueryActions({ query, onOpen }: { query: SavedQuery; onOpen: () => void }) {
+  const patch = usePatchQuery();
+  return (
+    <div onClick={(e) => e.stopPropagation()} className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="size-7" aria-label="Query actions">
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          <DropdownMenuItem onClick={onOpen}>
+            <Play className="size-4" /> Open in new tab
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => patch.mutate({ id: query.id, patch: { saved: !query.saved } })}>
+            {query.saved ? <StarOff className="size-4" /> : <Star className="size-4" />}
+            {query.saved ? "Remove from saved" : "Save query"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => copyWithToast("Share link", `${window.location.origin}/query/${query.id}`)}>
+            <Link2 className="size-4" /> Copy share link
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => copyWithToast("Request JSON", JSON.stringify(query.request, null, 2))}>
+            <Copy className="size-4" /> Copy request JSON
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
