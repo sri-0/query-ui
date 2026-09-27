@@ -120,8 +120,8 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
           }
           toolbarActions={
             <>
-              {schema.timeField && <ChartSeriesSelect schema={schema} value={body.histogram?.series ?? ""} onChange={(chartSeries) => useTabs.getState().updateQuery(tab.id, { chartSeries })} />}
               <DataTableRefreshButton onClick={refresh} />
+              {schema.timeField && <ChartSeriesSelect schema={schema} value={body.histogram?.series ?? ""} onChange={(chartSeries) => useTabs.getState().updateQuery(tab.id, { chartSeries })} />}
             </>
           }
           footerSlot={<QueryFooter meta={meta} />}
