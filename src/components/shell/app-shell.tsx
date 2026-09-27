@@ -36,7 +36,7 @@ export function AppShell() {
           {/* The assistant is global: it survives tab switches and can compose queries from Home. */}
           {aiOpen && (
             <>
-              <ResizableHandle className="w-0 bg-transparent after:w-2" />
+              <ResizableHandle className="w-2 bg-transparent after:w-full" />
               <ResizablePanel id="assistant" defaultSize="26%" minSize="18%" maxSize="45%" className="min-w-0">
                 <AiPanel />
               </ResizablePanel>

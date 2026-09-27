@@ -556,7 +556,7 @@ function FilterPanel({ tableId, footerSlot }: { tableId: string; footerSlot?: Re
           {footerSlot ? <div className="border-border shrink-0 border-t p-3">{footerSlot}</div> : null}
         </Panel>
       </ResizablePanel>
-      <ResizableHandle className={cn("w-0 bg-transparent after:w-2", !open && "hidden")} />
+      <ResizableHandle className={cn("w-2 bg-transparent after:w-full", !open && "hidden")} />
     </>
   );
 }

@@ -64,6 +64,16 @@ export function DataTableViewOptions() {
           />
           <CommandList>
             <CommandEmpty>No option found.</CommandEmpty>
+            {!search && (
+              <CommandGroup>
+                <CommandItem value="__show_all" onSelect={() => table.toggleAllColumnsVisible(true)}>
+                  Show all columns
+                </CommandItem>
+                <CommandItem value="__hide_all" onSelect={() => table.toggleAllColumnsVisible(false)}>
+                  Hide all columns
+                </CommandItem>
+              </CommandGroup>
+            )}
             <CommandGroup>
               <Sortable
                 value={sortedColumns.map((c) => ({ id: c.id }))}

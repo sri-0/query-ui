@@ -286,15 +286,13 @@ export function generateColumns<TData extends RowData>(
     const isDotted = key.includes(".");
     const filterFn = filters.filterFn(key);
 
+    // Every visible header gets the component: it carries the column menu
+    // (sort, filter, hide) even when the column itself is not sortable.
     const header = config.hideHeader
       ? () => <span className="sr-only">{config.label}</span>
-      : config.sortable
-        ? ({
-            column,
-          }: {
-            column: Parameters<typeof DataTableColumnHeader>[0]["column"];
-          }) => <DataTableColumnHeader column={column} title={config.label} />
-        : config.label;
+      : ({ column }: { column: Parameters<typeof DataTableColumnHeader>[0]["column"] }) => (
+          <DataTableColumnHeader column={column} title={config.label} />
+        );
 
     const needsMinMax =
       config.display.type === "heatmap" ||

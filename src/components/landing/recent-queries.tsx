@@ -37,10 +37,6 @@ export function RecentQueries() {
 
   const columns = React.useMemo<ColumnDef<typeof features, SavedQuery>[]>(
     () => [
-      helper.accessor("user", {
-        header: "",
-        cell: ({ getValue }) => <UserAvatar user={getValue()} />,
-      }),
       helper.display({
         id: "query",
         header: "Query",
@@ -69,6 +65,10 @@ export function RecentQueries() {
       helper.accessor("createdAt", {
         header: "When",
         cell: ({ getValue }) => <span className="text-muted-foreground">{formatDistanceToNow(new Date(getValue()), { addSuffix: true })}</span>,
+      }),
+      helper.accessor("user", {
+        header: "By",
+        cell: ({ getValue }) => <UserAvatar user={getValue()} />,
       }),
       helper.display({
         id: "open",

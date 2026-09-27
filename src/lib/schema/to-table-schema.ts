@@ -121,9 +121,8 @@ function toCol(f: ApiField, allModels: number): AnyCol | null {
         c = col.string().filterable("input");
     }
   }
-  c = c.label(labelFor(f)).sheet();
+  c = c.label(labelFor(f)).sheet().resizable().sortable(f.sortable && !f.conflict);
   if (f.description) c = c.description(f.description);
-  if (!f.sortable) c = c.sortable(false);
   if (hidden) c = c.hidden();
   return c;
 }
@@ -142,7 +141,7 @@ export function toTableSchema(schema: SchemaResponse) {
     const tf = schema.fields.find((f) => f.name === time);
     if (tf) {
       const c = toCol(tf, schema.models.length);
-      if (c) def[time] = c.defaultOpen().commandDisabled().minSize(200);
+      if (c) def[time] = c.defaultOpen().commandDisabled().minSize(200).resizable();
     }
   }
   // OpenSearch meta columns. Leading and visible when several models are
@@ -154,12 +153,13 @@ export function toTableSchema(schema: SchemaResponse) {
     .display("badge")
     .filterable("checkbox", { options: modelNames.map((m) => ({ label: m, value: m })) })
     .size(110)
-    .sheet();
+    .sheet()
+    .resizable();
   if (multi) modelCol = modelCol.defaultOpen();
   else modelCol = modelCol.hidden();
   def[MODEL_COLUMN] = modelCol;
-  let indexCol = col.string().notFilterable().label("Index").display("code").sortable(false).size(140).sheet();
-  let idCol = col.string().notFilterable().label("Doc ID").display("code").sortable(false).size(200).sheet();
+  let indexCol = col.string().notFilterable().label("Index").display("code").sortable(false).size(140).sheet().resizable();
+  let idCol = col.string().notFilterable().label("Doc ID").display("code").sortable(false).size(200).sheet().resizable();
   if (!multi) {
     indexCol = indexCol.hidden();
     idCol = idCol.hidden();
