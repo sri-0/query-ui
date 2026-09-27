@@ -4,6 +4,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useDraftValue } from "@/hooks/use-draft-value";
 import { api } from "@/lib/api/client";
 import type { SchemaResponse } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
@@ -38,15 +39,10 @@ export function LuceneBar({
   value: string;
   onCommit: (v: string) => void;
 }) {
-  const [draft, setDraft] = React.useState(value);
+  const [draft, setDraft] = useDraftValue(value);
   const [open, setOpen] = React.useState(false);
   const [caret, setCaret] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [seen, setSeen] = React.useState(value);
-  if (seen !== value) {
-    setSeen(value);
-    setDraft(value);
-  }
 
   const debounced = useDebounce(draft, 300);
   const validation = useQuery({

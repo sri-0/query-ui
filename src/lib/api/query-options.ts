@@ -39,5 +39,4 @@ export const searchOptions = (body: Omit<QueryRequest, "cursor" | "meta">) =>
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
     staleTime: 60_000,
-    refetchOnWindowFocus: false,
   });

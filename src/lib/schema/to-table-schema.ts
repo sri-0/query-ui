@@ -6,14 +6,16 @@ import { ARRAY_DELIMITER } from "@/lib/delimiters";
 import { field, type SchemaDefinition } from "@/lib/store/schema";
 import { subDays, subHours, subMinutes } from "date-fns";
 
+export const SELECT_COLUMN = "_select";
 export const MODEL_COLUMN = "_model";
-export const INDEX_COLUMN = "_index";
-export const ID_COLUMN = "_id";
+const INDEX_COLUMN = "_index";
+const ID_COLUMN = "_id";
 
 /** Keyword fields rendered as ids get a free-text filter instead of facets. */
 const ID_CELLS = new Set(["code"]);
 
-const LEVEL_COLORS: Record<string, string> = {
+/** Colours for level-like enums, shared by cells and chart series. */
+export const LEVEL_COLORS: Record<string, string> = {
   debug: "var(--muted-foreground)",
   info: "var(--info)",
   warn: "var(--warning)",
@@ -25,7 +27,7 @@ const LEVEL_COLORS: Record<string, string> = {
   critical: "var(--error)",
 };
 
-function datePresets(): DatePreset[] {
+export function datePresets(): DatePreset[] {
   const now = new Date();
   return [
     { label: "Last 15 minutes", shortcut: "15m", from: subMinutes(now, 15), to: now },
@@ -132,7 +134,7 @@ function toCol(f: ApiField, allModels: number): AnyCol | null {
  * is selected, then the remaining fields in the API's order.
  */
 export function toTableSchema(schema: SchemaResponse) {
-  const def: TableSchemaDefinition = {};
+  const def: TableSchemaDefinition = { [SELECT_COLUMN]: col.select() };
   const modelNames = schema.models.map((m) => m.name);
   const time = schema.timeField;
 

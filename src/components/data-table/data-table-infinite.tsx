@@ -12,7 +12,7 @@ import { DataTableFilterControls } from "@/components/data-table/data-table-filt
 import { DataTableFilterRail } from "@/components/data-table/data-table-filter-rail";
 import { DataTableProvider, useDataTable } from "@/components/data-table/data-table-provider";
 import { DataTableResetButton } from "@/components/data-table/data-table-reset-button";
-import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"; // TODO: check where to put this
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 import type { DataTableFilterField } from "@/components/data-table/types";
 import { Button } from "@/components/ui/button";
 import { useHotKey } from "@/hooks/use-hot-key";
@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useControls } from "@/components/controls";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import type { PanelImperativeHandle } from "react-resizable-panels";
+import { Panel, PanelBody, PanelHeader } from "@/components/shell/panel";
 import {
   type FetchNextPageOptions,
   type FetchPreviousPageOptions,
@@ -124,8 +125,6 @@ export interface DataTableInfiniteProps<TData extends RowData> {
   chartSlot?: React.ReactNode;
   footerSlot?: React.ReactNode;
   floatingBarSlot?: React.ReactNode;
-  /** Optional right-hand panel (e.g. an assistant). Rendered only when set. */
-  sideSlot?: React.ReactNode;
   className?: string;
 }
 
@@ -157,7 +156,6 @@ export function DataTableInfinite<TData extends RowData>({
   chartSlot,
   footerSlot,
   floatingBarSlot,
-  sideSlot,
   className,
 }: DataTableInfiniteProps<TData>) {
   const [columnFilters, setColumnFilters] =
@@ -353,12 +351,11 @@ export function DataTableInfinite<TData extends RowData>({
       getFacetedMinMaxValues={getFacetedMinMaxValues}
     >
       {/*
-        Three resizable panels: filters | results | side (e.g. an assistant).
-        Nothing depends on a measured height, so only the filter list and the
-        table container scroll.
+        Two resizable panels: filters | results. Nothing depends on a measured
+        height, so only the filter list and the table container scroll.
       */}
       <ResizablePanelGroup orientation="horizontal" className={cn("h-full w-full", className)}>
-        <FilterPanel footerSlot={footerSlot} />
+        <FilterPanel tableId={tableId} footerSlot={footerSlot} />
         <ResizablePanel id={`${tableId}-main`} minSize="30%" className="min-w-0">
           <div className="border-border relative flex h-full max-w-full flex-1 flex-col" style={columnSizeVars as React.CSSProperties}>
             <DataTableFilterRail />
@@ -505,14 +502,6 @@ export function DataTableInfinite<TData extends RowData>({
             </div>
           </div>
         </ResizablePanel>
-        {sideSlot ? (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel id={`${tableId}-side`} defaultSize="28%" minSize="18%" maxSize="50%" className="min-w-0">
-              {sideSlot}
-            </ResizablePanel>
-          </>
-        ) : null}
       </ResizablePanelGroup>
       {sheetSlot}
       {floatingBarSlot}
@@ -524,7 +513,7 @@ export function DataTableInfinite<TData extends RowData>({
  * The filter controls panel. A collapsible resizable panel whose open state is
  * shared with the toolbar toggle and the rail through `useControls`.
  */
-function FilterPanel({ footerSlot }: { footerSlot?: React.ReactNode }) {
+function FilterPanel({ tableId, footerSlot }: { tableId: string; footerSlot?: React.ReactNode }) {
   const { open, setOpen } = useControls();
   const { table } = useDataTable();
   const ref = React.useRef<PanelImperativeHandle | null>(null);
@@ -539,7 +528,7 @@ function FilterPanel({ footerSlot }: { footerSlot?: React.ReactNode }) {
   return (
     <>
       <ResizablePanel
-        id="filters"
+        id={`${tableId}-filters`}
         panelRef={ref}
         collapsible
         collapsedSize="0%"
@@ -552,23 +541,18 @@ function FilterPanel({ footerSlot }: { footerSlot?: React.ReactNode }) {
         }}
         className="min-w-0"
       >
-        <div className="flex h-full w-full flex-col overflow-hidden" inert={!open}>
-          <div className="border-border bg-background shrink-0 border-b p-2">
-            <div className="flex h-[46px] items-center justify-between gap-3">
-              <p className="text-foreground px-2 font-medium">Filters</p>
-              <div>
-                {table.state.columnFilters.length ? <DataTableResetButton /> : null}
-              </div>
-            </div>
-          </div>
+        <Panel className="pr-0">
+          <PanelHeader
+            title="Filters"
+            actions={table.state.columnFilters.length ? <DataTableResetButton /> : null}
+            onClose={() => setOpen(false)}
+          />
           {/* REMINDER: no top padding - it would offset the first filter row */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          <PanelBody className="px-2 pb-2">
             <DataTableFilterControls />
-          </div>
-          {footerSlot ? (
-            <div className="border-border bg-background shrink-0 border-t p-4">{footerSlot}</div>
-          ) : null}
-        </div>
+          </PanelBody>
+          {footerSlot ? <div className="border-border shrink-0 border-t p-3">{footerSlot}</div> : null}
+        </Panel>
       </ResizablePanel>
       <ResizableHandle withHandle className={cn(!open && "hidden")} />
     </>

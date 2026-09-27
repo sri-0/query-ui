@@ -11,9 +11,10 @@ import {
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
-import { Button } from "@/components/ui/button";
 import { useUi } from "@/lib/store/ui";
-import { Bot, X } from "lucide-react";
+import { useActiveQueryTab } from "@/lib/store/tabs";
+import { Bot } from "lucide-react";
+import { Panel, PanelHeader } from "./panel";
 import * as React from "react";
 
 const SUGGESTIONS = [
@@ -28,8 +29,9 @@ type ChatMessage = { id: string; role: "user" | "assistant"; text: string };
  * Placeholder assistant. Purely client-side: no model is called yet. It keeps
  * the AI Elements chrome in place so the real agent can be wired in later.
  */
-export function AiPanel({ models }: { models: string[] }) {
+export function AiPanel() {
   const setAiOpen = useUi((s) => s.setAiOpen);
+  const models = useActiveQueryTab()?.models ?? [];
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [status, setStatus] = React.useState<"ready" | "submitted">("ready");
 
@@ -54,15 +56,8 @@ export function AiPanel({ models }: { models: string[] }) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
-      <div className="flex h-10 shrink-0 items-center justify-between border-b px-3">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Bot className="size-4" /> AI assistant
-        </div>
-        <Button variant="ghost" size="icon" className="size-7" onClick={() => setAiOpen(false)} aria-label="Close panel">
-          <X className="size-4" />
-        </Button>
-      </div>
+    <Panel className="pl-0">
+      <PanelHeader title="AI assistant" icon={<Bot className="size-4" />} onClose={() => setAiOpen(false)} />
       <Conversation className="min-h-0 flex-1">
         <ConversationContent>
           {messages.length === 0 && (
@@ -100,6 +95,6 @@ export function AiPanel({ models }: { models: string[] }) {
           </PromptInputFooter>
         </PromptInput>
       </div>
-    </div>
+    </Panel>
   );
 }

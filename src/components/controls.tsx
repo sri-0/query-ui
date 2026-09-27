@@ -1,37 +1,20 @@
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { CONTROLS_KEY } from "@/lib/constants/local-storage";
-import { createContext, useContext } from "react";
+"use client";
 
-interface ControlsContextType {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+import { useUi } from "@/lib/store/ui";
+import type { Dispatch, SetStateAction } from "react";
+
+/**
+ * Open state of the filters panel. Kept as a hook with the data-table's
+ * original `useControls` shape so the copied table components need no changes,
+ * but backed by the shared UI store rather than per-table context.
+ */
+export function useControls(): { open: boolean; setOpen: Dispatch<SetStateAction<boolean>> } {
+  const open = useUi((s) => s.filtersOpen);
+  const setOpen = useUi((s) => s.setFiltersOpen);
+  return { open, setOpen };
 }
 
-export const ControlsContext = createContext<ControlsContextType | null>(null);
-
+/** No-op wrapper kept for the data-table provider's composition. */
 export function ControlsProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useLocalStorage(CONTROLS_KEY, true);
-
-  return (
-    <ControlsContext.Provider value={{ open, setOpen }}>
-      <div
-        // REMINDER: access the data-expanded state with tailwind via `group-data-[expanded=true]/controls:block`
-        // In tailwindcss v4, we could even use `group-data-expanded/controls:block`
-        className="group/controls h-full min-h-0"
-        data-expanded={open}
-      >
-        {children}
-      </div>
-    </ControlsContext.Provider>
-  );
-}
-
-export function useControls() {
-  const context = useContext(ControlsContext);
-
-  if (!context) {
-    throw new Error("useControls must be used within a ControlsProvider");
-  }
-
-  return context as ControlsContextType;
+  return <div className="h-full min-h-0">{children}</div>;
 }

@@ -1,20 +1,15 @@
 import type { ApiField, Filter, QueryRequest, SchemaResponse, Sort } from "@/lib/api/types";
 import type { QueryTabState } from "@/lib/store/tabs";
+import { toISO } from "./dates";
 import { MODEL_COLUMN, facetable } from "./to-table-schema";
 
-/** Data-table state keys that are not column filters. */
-export const STATE_KEYS = new Set(["sort", "uuid", "size", "direction", "cursor"]);
+/** Data-table state keys that are not column filters (see the extra fields in query-tab.tsx). */
+export const STATE_KEYS = new Set(["sort", "uuid"]);
 
 function isEmpty(v: unknown) {
   return v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
 }
 
-function toISO(v: unknown): string | null {
-  if (v instanceof Date) return v.toISOString();
-  if (typeof v === "number") return new Date(v).toISOString();
-  if (typeof v === "string") return v;
-  return null;
-}
 
 /** Converts one data-table filter value into typed API filters. */
 export function columnFilterToApi(field: ApiField, value: unknown): Filter[] {

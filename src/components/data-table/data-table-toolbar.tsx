@@ -1,32 +1,16 @@
 "use client";
 
 import { useDataTable } from "@/components/data-table/data-table-provider";
-import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useHotKey } from "@/hooks/use-hot-key";
 import { formatCompactNumber } from "@/lib/format";
-import { useControls } from "@/components/controls";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { DataTableFilterControlsDrawer } from "./data-table-filter-controls-drawer";
 import { DataTableResetButton } from "./data-table-reset-button";
 import { DataTableViewOptions } from "./data-table-view-options";
-import { TOOLTIP_DELAY } from "./ui-compat";
 
 interface DataTableToolbarProps {
   renderActions?: () => React.ReactNode;
 }
 
 export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
-  const { table, isLoading, columnFilters, totalRows, filterRows } =
-    useDataTable();
-  const { open, setOpen } = useControls();
-  useHotKey(() => setOpen((prev) => !prev), "b");
+  const { table, columnFilters, totalRows, filterRows } = useDataTable();
   const rows = {
     total: totalRows ?? table.getCoreRowModel().rows.length,
     filtered: filterRows ?? table.getFilteredRowModel().rows.length,
@@ -35,41 +19,6 @@ export function DataTableToolbar({ renderActions }: DataTableToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <TooltipProvider {...TOOLTIP_DELAY}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                onClick={() => setOpen((prev) => !prev)}
-                className="hidden gap-2 sm:flex"
-              >
-                {open ? (
-                  <>
-                    <PanelLeftClose className="h-4 w-4" />
-                    <span className="hidden md:block">Hide Controls</span>
-                  </>
-                ) : (
-                  <>
-                    <PanelLeftOpen className="h-4 w-4" />
-                    <span className="hidden md:block">Show Controls</span>
-                  </>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p className="text-nowrap">
-                Toggle controls with{" "}
-                <Kbd className="text-muted-foreground group-hover:text-accent-foreground ml-1">
-                  <span className="mr-1">⌘</span>
-                  <span>B</span>
-                </Kbd>
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <div className="block sm:hidden">
-          <DataTableFilterControlsDrawer />
-        </div>
         <div>
           <p className="text-muted-foreground hidden text-sm sm:block">
             <span className="font-mono font-medium">

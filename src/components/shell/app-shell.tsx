@@ -1,25 +1,25 @@
 "use client";
 
 import { Landing } from "@/components/landing/landing";
+import { ComposerHost } from "@/components/query/composer/composer-host";
 import { QueryTabView } from "@/components/query/query-tab";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { SidebarInset } from "@/components/ui/sidebar";
-import { useTabs } from "@/lib/store/tabs";
-import * as React from "react";
+import { selectActiveTab, useTabs } from "@/lib/store/tabs";
+import { useUi } from "@/lib/store/ui";
+import { useHydrated } from "@/hooks/use-hydrated";
+import { AiPanel } from "./ai-panel";
 import { AppSidebar } from "./app-sidebar";
 import { TabBar } from "./tab-bar";
 
-/** True once on the client; avoids rendering persisted tabs during SSR. */
-function useHydrated() {
-  return React.useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-}
 
 export function AppShell() {
-  const tabs = useTabs((s) => s.tabs);
-  const activeId = useTabs((s) => s.activeId);
+  // Only the active tab is mounted: table hotkeys (⌘B, ⌘K, Esc) are window
+  // listeners, so mounting every tab would fire them once per tab. Tab state
+  // lives in the store and query results in the TanStack cache, so switching
+  // back is cheap.
+  const active = useTabs(selectActiveTab);
+  const aiOpen = useUi((s) => s.aiOpen);
   const hydrated = useHydrated();
 
   return (
@@ -27,15 +27,24 @@ export function AppShell() {
       <AppSidebar />
       <SidebarInset className="h-svh min-w-0 overflow-hidden">
         <TabBar />
-        <div className="relative min-h-0 flex-1 overflow-hidden">
-          {hydrated &&
-            tabs.map((tab) => (
-              <div key={tab.id} className="absolute inset-0 overflow-hidden" hidden={tab.id !== activeId}>
-                {tab.kind === "home" ? <Landing /> : <QueryTabView tab={tab} active={tab.id === activeId} />}
-              </div>
-            ))}
-        </div>
+        <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+          <ResizablePanel id="workspace" minSize="40%" className="min-w-0">
+            <div className="h-full min-h-0 overflow-hidden">
+              {hydrated && active && (active.kind === "home" ? <Landing /> : <QueryTabView key={active.id} tab={active} />)}
+            </div>
+          </ResizablePanel>
+          {/* The assistant is global: it survives tab switches and can compose queries from Home. */}
+          {aiOpen && (
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel id="assistant" defaultSize="26%" minSize="18%" maxSize="45%" className="min-w-0">
+                <AiPanel />
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
       </SidebarInset>
+      <ComposerHost />
     </>
   );
 }

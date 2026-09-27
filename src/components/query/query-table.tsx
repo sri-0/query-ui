@@ -12,7 +12,7 @@ import type { QueryMeta, Row, SchemaResponse } from "@/lib/api/types";
 import { applyFacets, getFacetedMinMaxValues, getFacetedUniqueValues } from "@/lib/data-table";
 import { isActive } from "@/lib/filters";
 import { buildRequest, STATE_KEYS } from "@/lib/schema/filter-mapping";
-import { MODEL_COLUMN } from "@/lib/schema/to-table-schema";
+import { LEVEL_COLORS, MODEL_COLUMN, type toTableSchema } from "@/lib/schema/to-table-schema";
 import { useFilterState } from "@/lib/store/hooks/useFilterState";
 import type { SchemaDefinition } from "@/lib/store/schema";
 import type { QueryTab } from "@/lib/store/tabs";
@@ -21,49 +21,43 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { QueryFooter } from "./query-footer";
 import { QueryInputs } from "./query-inputs";
-import { AiPanel } from "@/components/shell/ai-panel";
-import { useUi } from "@/lib/store/ui";
+import { rowActionsColumn, SelectionBar } from "./table/row-actions";
+import { useTabs } from "@/lib/store/tabs";
 
 const MODEL_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
-const SERIES_COLORS: Record<string, string> = {
-  debug: "var(--muted-foreground)",
-  info: "var(--info)",
-  warn: "var(--warning)",
-  error: "var(--error)",
-  low: "var(--info)",
-  medium: "var(--warning)",
-  high: "var(--error)",
-  critical: "var(--destructive)",
-  total: "var(--chart-1)",
-};
+const SERIES_COLORS: Record<string, string> = { ...LEVEL_COLORS, total: "var(--chart-1)" };
 
 type Props = {
   tab: QueryTab;
   schema: SchemaResponse;
-  tableSchema: { definition: Parameters<typeof generateColumns>[0] };
+  tableSchema: ReturnType<typeof toTableSchema>;
   filterSchema: { definition: SchemaDefinition };
-  active: boolean;
 };
 
-export function QueryTable({ tab, schema, tableSchema, filterSchema, active }: Props) {
-  const columns = React.useMemo(() => generateColumns<Row>(tableSchema.definition), [tableSchema]);
+export function QueryTable({ tab, schema, tableSchema, filterSchema }: Props) {
+  const columns = React.useMemo(() => {
+    const generated = generateColumns<Row>(tableSchema.definition);
+    // Column 0 is the row menu, column 1 the select checkbox (from the schema).
+    return [rowActionsColumn(), ...generated];
+  }, [tableSchema]);
   const filterFields = React.useMemo(() => generateFilterFields<Row>(tableSchema.definition), [tableSchema]);
   const sheetFields = React.useMemo(() => generateSheetFields<Row>(tableSchema.definition), [tableSchema]);
   const defaultVisibility = React.useMemo(() => getDefaultColumnVisibility(tableSchema.definition), [tableSchema]);
 
   const state = useFilterState<Record<string, unknown>>();
-  const aiOpen = useUi((s) => s.aiOpen);
   const body = React.useMemo(() => buildRequest(tab, schema, state), [tab, schema, state]);
   const options = React.useMemo(() => searchOptions(body), [body]);
   const queryClient = useQueryClient();
-  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, error } = useInfiniteQuery({
-    ...options,
-    enabled: active || !!queryClient.getQueryData(options.queryKey),
-  });
+  const { data, isFetching, isLoading, fetchNextPage, hasNextPage, error } = useInfiniteQuery(options);
 
   const geoFields = React.useMemo(() => schema.fields.filter((f) => f.type === "geo_point").map((f) => f.name), [schema]);
   const rows = React.useMemo(() => (data?.pages.flatMap((p) => p.data) ?? []).map((r) => flattenGeo(r, geoFields)), [data?.pages, geoFields]);
   const meta: QueryMeta | undefined = data?.pages[0]?.meta;
+  // Remember the audit id so the tab can be shared as /query/:id.
+  const queryId = meta?.queryId;
+  React.useEffect(() => {
+    if (queryId) useTabs.getState().updateQuery(tab.id, { lastQueryId: queryId });
+  }, [queryId, tab.id]);
   // data-table facets require `rows`; stats-only facets (numbers) have none.
   const facets = React.useMemo(() => normalizeFacets(meta), [meta]);
 
@@ -81,9 +75,12 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema, active }: P
       ),
     [filterFields, facets, fieldModels, activeModels],
   );
-  const defaultColumnFilters = Object.entries(state)
-    .filter(([k, v]) => !STATE_KEYS.has(k) && isActive(v))
-    .map(([id, value]) => ({ id, value }));
+  // Initial table state only; the store keeps it in sync afterwards.
+  const [defaultColumnFilters] = React.useState(() =>
+    Object.entries(state)
+      .filter(([k, v]) => !STATE_KEYS.has(k) && isActive(v))
+      .map(([id, value]) => ({ id, value })),
+  );
   const sort = state.sort as { id: string; desc: boolean } | null | undefined;
 
   const series = React.useMemo<TimelineChartSeries[]>(() => {
@@ -122,7 +119,7 @@ export function QueryTable({ tab, schema, tableSchema, filterSchema, active }: P
           toolbarActions={<DataTableRefreshButton onClick={refresh} />}
           footerSlot={<QueryFooter meta={meta} />}
           commandSlot={<QueryInputs tab={tab} schema={schema} filterSchema={filterSchema.definition} error={error ?? undefined} />}
-          sideSlot={aiOpen ? <AiPanel models={body.indices ?? []} /> : undefined}
+          floatingBarSlot={<SelectionBar tabTitle={tab.title} />}
           sheetSlot={<SheetSlot sheetFields={sheetFields} meta={meta} fetched={rows.length} />}
           tableId={tab.id}
         />

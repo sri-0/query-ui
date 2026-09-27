@@ -204,10 +204,10 @@ function sizingFor(config: {
  * on a non-boolean attribute.
  */
 function selectionState(allSelected: boolean, someSelected: boolean) {
-  const indeterminate = !allSelected && someSelected;
+  // Radix models the mixed state through `checked`; a bare `indeterminate`
+  // attribute is not a DOM boolean and React warns about it.
   return {
-    checked: allSelected || (someSelected && "indeterminate"),
-    ...(indeterminate ? { indeterminate: true } : {}),
+    checked: allSelected ? true : someSelected ? "indeterminate" : false,
   } as ComponentProps<typeof Checkbox>;
 }
 

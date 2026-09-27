@@ -20,7 +20,7 @@ import { QueryTable } from "./query-table";
  * One query tab: loads the schema for its models, derives the table schema
  * from it and mounts an isolated store so several tabs can coexist.
  */
-export function QueryTabView({ tab, active }: { tab: QueryTab; active: boolean }) {
+export function QueryTabView({ tab }: { tab: QueryTab }) {
   const { data: schema, isLoading, error } = useQuery(schemaOptions(tab.models));
   if (isLoading) {
     return (
@@ -42,16 +42,18 @@ export function QueryTabView({ tab, active }: { tab: QueryTab; active: boolean }
       </div>
     );
   }
-  return <Loaded tab={tab} schema={schema} active={active} />;
+  return <Loaded tab={tab} schema={schema} />;
 }
 
-function Loaded({ tab, schema, active }: { tab: QueryTab; schema: SchemaResponse; active: boolean }) {
+function Loaded({ tab, schema }: { tab: QueryTab; schema: SchemaResponse }) {
   const updateQuery = useTabs((s) => s.updateQuery);
   const tableSchema = React.useMemo(() => toTableSchema(schema), [schema]);
   const filterSchema = React.useMemo(() => {
     const generated = generateFilterSchema(tableSchema.definition, { sort: field.sort(), uuid: field.string() });
     return createSchema(widenFilterSchema(generated.definition, schema));
   }, [tableSchema, schema]);
+  // Revive the persisted filter state once per schema. Later `tab.filters`
+  // writes come from this tab's own store (via onChange) and must not loop back.
   const initialState = React.useMemo(() => reviveState(tab.filters, schema), [schema]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onChange = React.useCallback(
@@ -62,7 +64,7 @@ function Loaded({ tab, schema, active }: { tab: QueryTab; schema: SchemaResponse
 
   return (
     <DataTableStoreProvider adapter={adapter}>
-      <QueryTable tab={tab} schema={schema} tableSchema={tableSchema} filterSchema={filterSchema} active={active} />
+      <QueryTable tab={tab} schema={schema} tableSchema={tableSchema} filterSchema={filterSchema} />
     </DataTableStoreProvider>
   );
 }

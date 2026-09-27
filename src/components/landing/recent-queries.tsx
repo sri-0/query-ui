@@ -1,86 +1,189 @@
 "use client";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { recentQueriesOptions } from "@/lib/api/query-options";
 import type { SavedQuery } from "@/lib/api/types";
+import { describeSavedQuery, savedQueryToTab } from "@/lib/schema/saved-query";
 import { useTabs } from "@/lib/store/tabs";
 import { useQuery } from "@tanstack/react-query";
+import {
+  createColumnHelper,
+  createPaginatedRowModel,
+  flexRender,
+  rowPaginationFeature,
+  tableFeatures,
+  useTable,
+  type ColumnDef,
+  type PaginationState,
+} from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
 import { Play } from "lucide-react";
+import * as React from "react";
+
+const PAGE_SIZE = 10;
+const features = tableFeatures({ rowPaginationFeature, paginatedRowModel: createPaginatedRowModel() });
+const helper = createColumnHelper<typeof features, SavedQuery>();
 
 export function RecentQueries() {
-  const { data, isLoading, error } = useQuery(recentQueriesOptions(30));
+  const { data, isLoading, error } = useQuery(recentQueriesOptions(200));
   const openQuery = useTabs((s) => s.openQuery);
+  const reopen = React.useCallback((q: SavedQuery) => openQuery(savedQueryToTab(q)), [openQuery]);
 
-  const reopen = (q: SavedQuery) => {
-    const r = q.request;
-    openQuery({
-      title: titleFor(q),
-      models: r.indices ?? q.indices,
-      lucene: r.lucene ?? "",
-      text: r.text ?? "",
-      semantic: r.semantic?.text ?? "",
-      advanced: r.filters ?? [],
-    });
-  };
+  const columns = React.useMemo<ColumnDef<typeof features, SavedQuery>[]>(
+    () => [
+      helper.accessor("user", {
+        header: "",
+        cell: ({ getValue }) => <UserAvatar user={getValue()} />,
+      }),
+      helper.display({
+        id: "query",
+        header: "Query",
+        cell: ({ row }) => <span className="block max-w-md truncate font-mono text-xs">{describeSavedQuery(row.original)}</span>,
+      }),
+      helper.accessor("indices", {
+        header: "Models",
+        cell: ({ getValue }) => (
+          <div className="flex flex-wrap gap-1">
+            {getValue().map((m) => (
+              <Badge key={m} variant="outline" className="font-mono text-[10px]">
+                {m}
+              </Badge>
+            ))}
+          </div>
+        ),
+      }),
+      helper.accessor("resultCount", {
+        header: () => <div className="text-right">Results</div>,
+        cell: ({ getValue }) => <div className="text-right tabular-nums">{getValue().toLocaleString()}</div>,
+      }),
+      helper.accessor("tookMs", {
+        header: () => <div className="text-right">Took</div>,
+        cell: ({ getValue }) => <div className="text-right tabular-nums text-muted-foreground">{getValue()} ms</div>,
+      }),
+      helper.accessor("createdAt", {
+        header: "When",
+        cell: ({ getValue }) => <span className="text-muted-foreground">{formatDistanceToNow(new Date(getValue()), { addSuffix: true })}</span>,
+      }),
+      helper.display({
+        id: "open",
+        header: "",
+        cell: () => (
+          <Button size="icon" variant="ghost" className="size-7" aria-label="Open">
+            <Play className="size-3.5" />
+          </Button>
+        ),
+      }),
+      // TanStack v9's column helper narrows TValue per accessor; the table wants the wide union.
+    ] as ColumnDef<typeof features, SavedQuery>[],
+    [],
+  );
+
+  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE });
+  const rows = React.useMemo(() => data?.queries ?? [], [data]);
+  const tableOptions = React.useMemo(
+    () => ({ features, data: rows, columns, state: { pagination }, onPaginationChange: setPagination }),
+    [rows, columns, pagination],
+  );
+  const table = useTable(tableOptions);
 
   if (isLoading) return <Skeleton className="h-40 rounded-xl" />;
   if (error) return <p className="text-sm text-destructive">Could not load recent queries: {error.message}</p>;
-  if (!data?.queries.length)
+  if (!data?.queries.length) {
     return <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No queries yet. Run one and it will appear here.</p>;
+  }
+
+  const page = table.state.pagination.pageIndex;
+  const pageCount = table.getPageCount();
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Query</TableHead>
-            <TableHead>Models</TableHead>
-            <TableHead className="text-right">Results</TableHead>
-            <TableHead className="text-right">Took</TableHead>
-            <TableHead>When</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.queries.map((q) => (
-            <TableRow key={q.id} className="cursor-pointer" onClick={() => reopen(q)}>
-              <TableCell className="max-w-md truncate font-mono text-xs">{titleFor(q)}</TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {q.indices.map((m) => (
-                    <Badge key={m} variant="outline" className="font-mono text-[10px]">
-                      {m}
-                    </Badge>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell className="text-right tabular-nums">{q.resultCount.toLocaleString()}</TableCell>
-              <TableCell className="text-right tabular-nums text-muted-foreground">{q.tookMs} ms</TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDistanceToNow(new Date(q.createdAt), { addSuffix: true })}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button size="icon" variant="ghost" className="size-7" aria-label="Open">
-                  <Play className="size-3.5" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="flex flex-col gap-3">
+      <div className="rounded-xl border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((h) => (
+                  <TableHead key={h.id} className={h.id === "user" || h.id === "open" ? "w-10" : undefined}>
+                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="cursor-pointer" onClick={() => reopen(row.original)}>
+                {row.getAllCells().map((cell) => (
+                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {pageCount > 1 && (
+        <Pagination className="justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious onClick={() => table.previousPage()} aria-disabled={!table.getCanPreviousPage()} className={!table.getCanPreviousPage() ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+            </PaginationItem>
+            {pageNumbers(page, pageCount).map((p, i) =>
+              p === null ? (
+                <PaginationItem key={`gap-${i}`}>
+                  <span className="px-2 text-muted-foreground">…</span>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={p}>
+                  <PaginationLink isActive={p === page} onClick={() => table.setPageIndex(p)} className="cursor-pointer">
+                    {p + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
+            <PaginationItem>
+              <PaginationNext onClick={() => table.nextPage()} aria-disabled={!table.getCanNextPage()} className={!table.getCanNextPage() ? "pointer-events-none opacity-50" : "cursor-pointer"} />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 }
 
-function titleFor(q: SavedQuery) {
-  if (q.lucene) return q.lucene;
-  if (q.semantic) return `~ ${q.semantic}`;
-  if (q.text) return `"${q.text}"`;
-  const f = q.request.filters ?? [];
-  if (f.length) return f.map((x) => `${x.field}:${x.op}${x.value !== undefined ? ` ${JSON.stringify(x.value)}` : ""}`).join("  ");
-  return "match all";
+function UserAvatar({ user }: { user: string }) {
+  const initials = user
+    .split(/[.\s_@-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Avatar className="size-7">
+          <AvatarFallback className="text-[10px]">{initials || "?"}</AvatarFallback>
+        </Avatar>
+      </TooltipTrigger>
+      <TooltipContent>{user}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Current page, neighbours, first and last; `null` marks a gap. */
+function pageNumbers(current: number, count: number): (number | null)[] {
+  if (count <= 7) return Array.from({ length: count }, (_, i) => i);
+  const set = new Set([0, count - 1, current - 1, current, current + 1].filter((p) => p >= 0 && p < count));
+  const sorted = [...set].sort((a, b) => a - b);
+  const out: (number | null)[] = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) out.push(null);
+    out.push(p);
+  });
+  return out;
 }

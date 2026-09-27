@@ -12,18 +12,19 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useTabs } from "@/lib/store/tabs";
-import { Bot, Database, History, Home, Plus, Search } from "lucide-react";
-import { NewQueryDialog } from "@/components/landing/new-query-dialog";
-import * as React from "react";
 import { useUi } from "@/lib/store/ui";
+import { Home, Plus, Search } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AppSidebar() {
-  const aiOpen = useUi((s) => s.aiOpen);
-  const setAiOpen = useUi((s) => s.setAiOpen);
   const setActive = useTabs((s) => s.setActive);
   const activeId = useTabs((s) => s.activeId);
-  const [newOpen, setNewOpen] = React.useState(false);
+  const openComposer = useUi((s) => s.openComposer);
+
+  const items = [
+    { label: "Home", icon: Home, onClick: () => setActive("home"), active: activeId === "home" },
+    { label: "New query", icon: Plus, onClick: () => openComposer() },
+  ];
 
   return (
     <Sidebar collapsible="icon">
@@ -46,36 +47,14 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Home" isActive={activeId === "home"} onClick={() => setActive("home")}>
-                  <Home />
-                  <span>Home</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="New query" onClick={() => setNewOpen(true)}>
-                  <Plus />
-                  <span>New query</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Recent queries" onClick={() => setActive("home")}>
-                  <History />
-                  <span>Recent queries</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Models" onClick={() => setActive("home")}>
-                  <Database />
-                  <span>Models</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="AI assistant" isActive={aiOpen} onClick={() => setAiOpen((v) => !v)}>
-                  <Bot />
-                  <span>AI assistant</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton tooltip={item.label} isActive={item.active} onClick={item.onClick}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -87,7 +66,6 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <NewQueryDialog open={newOpen} onOpenChange={setNewOpen} />
     </Sidebar>
   );
 }
